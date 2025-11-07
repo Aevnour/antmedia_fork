@@ -130,6 +130,87 @@ class AntHelper {
     }
   }
 
+  Future<bool> changeVideoQualityLive(
+    String streamId,
+    int width,
+    int height,
+    int frameRate,
+  ) async {
+    try {
+      if (_localStream == null) {
+        print("No local stream available");
+        return false;
+      }
+
+      final pc = _peerConnections[streamId];
+      if (pc == null) {
+        print("No peer connection found for $streamId");
+        return false;
+      }
+
+      final videoTracks = _localStream!.getVideoTracks();
+      if (videoTracks.isEmpty) {
+        print("No video tracks found");
+        return false;
+      }
+
+      final oldTrack = videoTracks.first;
+      final sender = await getSender(streamId, 'video');
+      if (sender == null) {
+        print("No video sender found");
+        return false;
+      }
+
+      final newConstraints = {
+        'audio': false, // We only need video
+        'video': {
+          'width': {'ideal': width, 'max': 1920},
+          'height': {'ideal': height, 'max': 1080},
+          'frameRate': {'ideal': frameRate, 'max': 60},
+          'facingMode': oldTrack.getSettings()['facingMode'] ?? 'environment',
+        },
+      };
+
+      print("Creating new video stream with ${width}x${height}");
+
+      final newStream =
+          await navigator.mediaDevices.getUserMedia(newConstraints);
+      final newTrack = newStream.getVideoTracks().first;
+
+      await sender.replaceTrack(newTrack);
+      print("Track replaced successfully");
+
+      oldTrack.stop();
+      _localStream!.removeTrack(oldTrack);
+      _localStream!.addTrack(newTrack);
+
+      final settings = newTrack.getSettings();
+      print(
+          "✅ New resolution active: ${settings['width']}x${settings['height']} @ ${settings['frameRate']}fps");
+
+      // 7. Update local preview if needed
+      onLocalStream(_localStream!);
+
+      return true;
+    } catch (e) {
+      print("❌ Error changing video quality: $e");
+      return false;
+    }
+  }
+
+  Future<bool> changeVideoBitrateLive(String streamId, int bitrateKbps) async {
+    try {
+      final success = await setMaxBitrate(streamId, 'video', bitrateKbps);
+      if (success) {
+        print("✅ Bitrate changed to ${bitrateKbps} kbps");
+      }
+      return success;
+    } catch (e) {
+      print("❌ Error changing bitrate: $e");
+      return false;
+    }
+  }
+
   Future<void> enableSpeaker(bool enable, MediaStream track) async {
     final audioTracks = track.getAudioTracks();
     for (final t in audioTracks) {
