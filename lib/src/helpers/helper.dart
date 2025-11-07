@@ -29,7 +29,7 @@ class AntHelper {
   final String _host;
   final String streamName;
   final bool _autoStart;
-  static Map<String, dynamic>? customVideoConstraints;
+  final Map<String, dynamic>? customVideoConstraints;
 
   // Max video and audio bitrate in kbps. Default: Unlimited
   int maxVideoBitrate = -1;
@@ -46,23 +46,23 @@ class AntHelper {
 
   // Constructor for AntHelper
   AntHelper(
-    this._autoStart,
-    this._host,
-    this._streamId,
-    this.streamName,
-    this._roomId,
-    this._token,
-    this.onStateChange,
-    this.onAddRemoteStream,
-    this.onDataChannel,
-    this.onDataChannelMessage,
-    this.onLocalStream,
-    this.onRemoveRemoteStream,
-    this.userScreen,
-    this.onupdateConferencePerson,
-    this.iceServers,
-    this.callbacks,
-  ) {
+      this._autoStart,
+      this._host,
+      this._streamId,
+      this.streamName,
+      this._roomId,
+      this._token,
+      this.onStateChange,
+      this.onAddRemoteStream,
+      this.onDataChannel,
+      this.onDataChannelMessage,
+      this.onLocalStream,
+      this.onRemoveRemoteStream,
+      this.userScreen,
+      this.onupdateConferencePerson,
+      this.iceServers,
+      this.callbacks,
+      this.customVideoConstraints) {
     final config = {
       "sdpSemantics": "unified-plan",
       'iceServers': iceServers,
