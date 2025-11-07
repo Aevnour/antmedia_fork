@@ -27,7 +27,9 @@ class AntHelper {
   final String _roomId;
   final String _token;
   final String _host;
+  final String streamName;
   final bool _autoStart;
+  static Map<String, dynamic>? customVideoConstraints;
 
   // Max video and audio bitrate in kbps. Default: Unlimited
   int maxVideoBitrate = -1;
@@ -47,6 +49,7 @@ class AntHelper {
     this._autoStart,
     this._host,
     this._streamId,
+    this.streamName,
     this._roomId,
     this._token,
     this.onStateChange,
@@ -123,7 +126,14 @@ class AntHelper {
       final audioTrack = _localStream!
           .getAudioTracks()
           .firstWhere((track) => track.kind == 'audio');
-      Helper.setMicrophoneMute(mute, audioTrack);
+      await Helper.setMicrophoneMute(mute, audioTrack);
+    }
+  }
+
+  Future<void> enableSpeaker(bool enable, MediaStream track) async {
+    final audioTracks = track.getAudioTracks();
+    for (final t in audioTracks) {
+      t.enableSpeakerphone(enable);
     }
   }
 
@@ -351,57 +361,15 @@ class AntHelper {
 
       if (_autoStart) {
         if (_type == AntMediaType.Publish) {
-          publish(
-              _streamId,
-              _token,
-              "",
-              "",
-              _streamId,
-              "",
-              "");
+          publish(_streamId, _token, "", "", streamName, "", "");
         } else if (_type == AntMediaType.DataChannelOnly) {
-          publish(
-              _streamId,
-              _token,
-              "",
-              "",
-              _streamId,
-              "",
-              "");
-          play(
-              _streamId,
-              _token,
-              "",
-              [],
-              "",
-              "",
-              "");
+          publish(_streamId, _token, "", "", _streamId, "", "");
+          play(_streamId, _token, "", [], "", "", "");
         } else if (_type == AntMediaType.Conference) {
-          publish(
-              _streamId,
-              _token,
-              "",
-              "",
-              _streamId,
-              _roomId,
-              "");
-          play(
-              _roomId,
-              _token,
-              _roomId,
-              [],
-              "",
-              "",
-              "");
+          publish(_streamId, _token, "", "", streamName, _roomId, "");
+          play(_roomId, _token, _roomId, [], "", "", "");
         } else if (_type == AntMediaType.Play) {
-          play(
-              _streamId,
-              _token,
-              "",
-              [],
-              "",
-              "",
-              "");
+          play(_streamId, _token, "", [], "", "", "");
         } else if (_type == AntMediaType.Peer) {
           join(_streamId);
         }
@@ -430,17 +398,20 @@ class AntHelper {
 
   // Create a local stream using camera or display
   Future<MediaStream> createStream(media, bool userScreen) async {
+    final videoConstraints = customVideoConstraints ??
+        {
+          'mandatory': {
+            'minWidth': '640',
+            'minHeight': '480',
+            'minFrameRate': '30',
+          },
+          'facingMode': 'environment',
+          'optional': [],
+        };
+
     final mediaConstraints = {
       'audio': true,
-      'video': {
-        'mandatory': {
-          'minWidth': '640',
-          'minHeight': '480',
-          'minFrameRate': '30',
-        },
-        'facingMode': 'user',
-        'optional': [],
-      },
+      'video': videoConstraints,
     };
 
     final stream = userScreen
@@ -464,6 +435,8 @@ class AntHelper {
         _type == AntMediaType.Peer ||
         _type == AntMediaType.Conference ||
         _type == AntMediaType.Default) {
+      _localStream?.dispose();
+      _localStream = null;
       if (media != 'data' && _localStream == null) {
         _localStream = await createStream(media, userScreen);
         _remoteStreams.add(_localStream!);
@@ -562,7 +535,6 @@ class AntHelper {
     }
   }
 
-
   Future<void> _createAnswerAntMedia(
     String id,
     RTCPeerConnection pc,
@@ -593,8 +565,8 @@ class AntHelper {
   void closePeerConnection(String streamId) {
     print('bye: $streamId');
     if (_mute) muteMic(false);
-    _localStream?.dispose();
-    _localStream = null;
+    // _localStream?.dispose();
+    // _localStream = null;
     final pc = _peerConnections.remove(streamId);
     pc?.close();
     _dataChannel?.close();
@@ -668,13 +640,15 @@ class AntHelper {
     };
     _sendAntMedia(request);
   }
-  void getStreamInfo(String streamId){
+
+  void getStreamInfo(String streamId) {
     final request = {
       'command': 'getStreamInfo',
       'streamId': streamId,
     };
     _sendAntMedia(request);
   }
+
   // Force stream into a specific quality
   void forceStreamQuality(String streamId, int resolution) {
     final request = {

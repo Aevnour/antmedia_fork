@@ -62,10 +62,10 @@ class AntMediaFlutter {
       await FlutterBackground.initialize(androidConfig: androidConfig);
       try {
         await FlutterBackground.enableBackgroundExecution();
-      } catch (e) {
-      }
+      } catch (e) {}
 
-      bool initialized = await FlutterBackground.initialize(androidConfig: androidConfig);
+      bool initialized =
+          await FlutterBackground.initialize(androidConfig: androidConfig);
       if (initialized) {
         await FlutterBackground.enableBackgroundExecution();
         return true;
@@ -84,6 +84,7 @@ class AntMediaFlutter {
   static void connect(
       String ip,
       String streamId,
+      String streamName,
       String roomId,
       String token,
       AntMediaType type,
@@ -99,7 +100,7 @@ class AntMediaFlutter {
       Callbacks callbacks) async {
     anthelper = null;
     anthelper ??= AntHelper(
-      // automatically start the service
+        // automatically start the service
         true,
 
         //host
@@ -108,6 +109,8 @@ class AntMediaFlutter {
         //streamID
         streamId,
 
+        //streamName
+        streamName,
         //roomID
         roomId,
 
@@ -150,6 +153,7 @@ class AntMediaFlutter {
   static void prepare(
       String ip,
       String streamId,
+      String streamName,
       String roomId,
       String token,
       AntMediaType type,
@@ -165,14 +169,17 @@ class AntMediaFlutter {
       Callbacks callbacks) async {
     anthelper = null;
     anthelper ??= AntHelper(
-      // automatically start the service
-      false,
+        // automatically start the service
+        false,
 
-      //host
+        //host
         ip,
 
         //streamID
         streamId,
+
+        //streamName
+        streamName,
 
         //roomID
         roomId,
