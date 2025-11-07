@@ -97,7 +97,8 @@ class AntMediaFlutter {
       ConferenceUpdateCallback onupdateConferencePerson,
       StreamStateCallback onRemoveRemoteStream,
       List<Map<String, String>> iceServers,
-      Callbacks callbacks) async {
+      Callbacks callbacks,
+      Map<String, dynamic> customVIdeoConstraints) async {
     anthelper = null;
     anthelper ??= AntHelper(
         // automatically start the service
@@ -145,7 +146,10 @@ class AntMediaFlutter {
         iceServers,
 
         //callbacks
-        callbacks)
+        callbacks,
+
+        //customVIdeoConstraints
+        customVIdeoConstraints)
       ..connect(type);
   }
 
@@ -166,7 +170,8 @@ class AntMediaFlutter {
       ConferenceUpdateCallback onupdateConferencePerson,
       StreamStateCallback onRemoveRemoteStream,
       List<Map<String, String>> iceServers,
-      Callbacks callbacks) async {
+      Callbacks callbacks,
+      Map<String, dynamic> customVIdeoConstraints) async {
     anthelper = null;
     anthelper ??= AntHelper(
         // automatically start the service
@@ -215,7 +220,10 @@ class AntMediaFlutter {
         iceServers,
 
         //callbacks
-        callbacks)
+        callbacks,
+
+        //customVIdeoConstraints
+        customVIdeoConstraints)
       ..connect(type);
   }
 }
