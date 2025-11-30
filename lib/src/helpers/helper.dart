@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:ant_media_flutter/ant_media_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
 import '../utils/websocket.dart'
@@ -536,34 +537,22 @@ class AntHelper {
           final sender = await pc.addTrack(track, _localStream!);
           _senders.add(sender);
 
-          // -------------------------------------------------------------
-          // FIX STARTS HERE: Force Resolution Priority over Frame Rate
-          // -------------------------------------------------------------
           if (track.kind == 'video') {
             try {
               var parameters = sender.parameters;
-
-              // 1. Tell WebRTC: "Never drop resolution. Drop FPS instead."
               parameters.degradationPreference =
                   RTCDegradationPreference.MAINTAIN_RESOLUTION;
-
-              // 2. Force a high start bitrate to avoid the "low quality start"
               if (parameters.encodings != null &&
                   parameters.encodings!.isNotEmpty) {
-                // Force 3.5 Mbps immediately.
-                // This makes WebRTC behave as if it already ramped up.
-                parameters.encodings![0].maxBitrate = 3500 * 1000;
-                parameters.encodings![0].minBitrate = 1500 * 1000;
+                parameters.encodings![0].minBitrate = 2500 * 1000;
                 parameters.encodings![0].scaleResolutionDownBy = 1.0;
               }
 
               await sender.setParameters(parameters);
-              // print("✅ AntHelper: Forced MAINTAIN_RESOLUTION and High Bitrate");
             } catch (e) {
-              // print("❌ AntHelper Error setting video parameters: $e");
+              debugPrint(e.toString());
             }
           }
-          // -------------------------------------------------------------
         }
       }
     }
